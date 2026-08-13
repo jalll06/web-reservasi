@@ -112,9 +112,13 @@ function updateServerTime() {
     if (!el) return;
     const now = new Date();
     // WIB = UTC+7
-    const wib = new Date(now.getTime() + (7 * 60 - now.getTimezoneOffset()) * 60000);
+    // Convert local time to UTC, then add 7 hours: correct for all client timezones.
+    const utcMillis = now.getTime() + now.getTimezoneOffset() * 60000;
+    const wib = new Date(utcMillis + (7 * 60 * 60000));
     const hh = String(wib.getHours()).padStart(2, '0');
     const mm = String(wib.getMinutes()).padStart(2, '0');
     el.textContent = `${hh}:${mm}`;
 }
+// Update immediately and then every 30 seconds
+updateServerTime();
 setInterval(updateServerTime, 1000 * 30);
