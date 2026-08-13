@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "check-secrets": "node scripts/check-secrets.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
