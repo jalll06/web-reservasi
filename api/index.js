@@ -503,6 +503,14 @@ module.exports = async (req, res) => {
                 return send(res, 200, { success: true, message: `Data reservasi #${id} berhasil dihapus!` });
             }
 
+            // -----------------------------------------------------------
+            // SERVER TIME (return UTC millis and ISO)
+            // -----------------------------------------------------------
+            case 'GET:server_time': {
+                const now = new Date();
+                return send(res, 200, { success: true, now: now.toISOString(), epoch: now.getTime() });
+            }
+
             default:
                 return send(res, 404, { success: false, message: `Action tidak ditemukan: ${action}` });
         }

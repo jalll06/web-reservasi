@@ -110,15 +110,37 @@ function escapeHtml(str) {
 function updateServerTime() {
     const el = document.getElementById('server-time');
     if (!el) return;
-    const now = new Date();
-    // WIB = UTC+7
-    // Convert local time to UTC, then add 7 hours: correct for all client timezones.
-    const utcMillis = now.getTime() + now.getTimezoneOffset() * 60000;
-    const wib = new Date(utcMillis + (7 * 60 * 60000));
-    const hh = String(wib.getHours()).padStart(2, '0');
-    const mm = String(wib.getMinutes()).padStart(2, '0');
+    // If serverTime is available, use it (kept in milliseconds), otherwise fallback to client-based WIB
+    let wibDate;
+    if (window.__serverTimeSync && typeof window.__serverTimeSync.offsetMillis === 'number') {
+        const now = Date.now() + window.__serverTimeSync.offsetMillis;
+        wibDate = new Date(now + (7 * 60 * 60000));
+    } else {
+        const now = new Date();
+        const utcMillis = now.getTime() + now.getTimezoneOffset() * 60000;
+        wibDate = new Date(utcMillis + (7 * 60 * 60000));
+    }
+    const hh = String(wibDate.getHours()).padStart(2, '0');
+    const mm = String(wibDate.getMinutes()).padStart(2, '0');
     el.textContent = `${hh}:${mm}`;
 }
 // Update immediately and then every 30 seconds
 updateServerTime();
 setInterval(updateServerTime, 1000 * 30);
+
+// Try to fetch server time once to compute offset between client and server.
+async function syncServerTime() {
+    try {
+        const res = await fetch('/api?action=server_time');
+        const data = await res.json();
+        if (data && data.epoch) {
+            const clientNow = Date.now();
+            // offset = serverEpoch - clientEpoch
+            window.__serverTimeSync = { offsetMillis: data.epoch - clientNow };
+            updateServerTime();
+        }
+    } catch (e) {
+        // ignore
+    }
+}
+syncServerTime();
